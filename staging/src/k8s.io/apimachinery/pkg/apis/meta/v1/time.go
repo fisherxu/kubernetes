@@ -45,24 +45,24 @@ func (t *Time) DeepCopyInto(out *Time) {
 }
 
 // String returns the representation of the time.
-func (t Time) String() string {
+func (t *Time) String() string {
 	return t.Time.String()
 }
 
 // NewTime returns a wrapped instance of the provided time
-func NewTime(time time.Time) Time {
-	return Time{time}
+func NewTime(time time.Time) *Time {
+	return &Time{time}
 }
 
 // Date returns the Time corresponding to the supplied parameters
 // by wrapping time.Date.
-func Date(year int, month time.Month, day, hour, min, sec, nsec int, loc *time.Location) Time {
-	return Time{time.Date(year, month, day, hour, min, sec, nsec, loc)}
+func Date(year int, month time.Month, day, hour, min, sec, nsec int, loc *time.Location) *Time {
+	return &Time{time.Date(year, month, day, hour, min, sec, nsec, loc)}
 }
 
 // Now returns the current local time.
-func Now() Time {
-	return Time{time.Now()}
+func Now() *Time {
+	return &Time{time.Now()}
 }
 
 // IsZero returns true if the value is nil or time is zero.
@@ -91,14 +91,14 @@ func (t *Time) Equal(u *Time) bool {
 
 // Unix returns the local time corresponding to the given Unix time
 // by wrapping time.Unix.
-func Unix(sec int64, nsec int64) Time {
-	return Time{time.Unix(sec, nsec)}
+func Unix(sec int64, nsec int64) *Time {
+	return &Time{time.Unix(sec, nsec)}
 }
 
 // Rfc3339Copy returns a copy of the Time at second-level precision.
-func (t Time) Rfc3339Copy() Time {
+func (t *Time) Rfc3339Copy() *Time {
 	copied, _ := time.Parse(time.RFC3339, t.Format(time.RFC3339))
-	return Time{copied}
+	return &Time{copied}
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface.
@@ -142,7 +142,7 @@ func (t *Time) UnmarshalQueryParameter(str string) error {
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (t Time) MarshalJSON() ([]byte, error) {
+func (t *Time) MarshalJSON() ([]byte, error) {
 	if t.IsZero() {
 		// Encode unset/nil objects as JSON's "null".
 		return []byte("null"), nil
@@ -151,7 +151,7 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.UTC().Format(time.RFC3339))
 }
 
-func (_ Time) OpenAPIDefinition() openapi.OpenAPIDefinition {
+func (_ *Time) OpenAPIDefinition() openapi.OpenAPIDefinition {
 	return openapi.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -163,7 +163,7 @@ func (_ Time) OpenAPIDefinition() openapi.OpenAPIDefinition {
 }
 
 // MarshalQueryParameter converts to a URL query parameter value
-func (t Time) MarshalQueryParameter() (string, error) {
+func (t *Time) MarshalQueryParameter() (string, error) {
 	if t.IsZero() {
 		// Encode unset/nil objects as an empty string
 		return "", nil

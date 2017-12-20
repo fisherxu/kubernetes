@@ -45,24 +45,24 @@ func (t *MicroTime) DeepCopyInto(out *MicroTime) {
 }
 
 // String returns the representation of the time.
-func (t MicroTime) String() string {
+func (t *MicroTime) String() string {
 	return t.Time.String()
 }
 
 // NewMicroTime returns a wrapped instance of the provided time
-func NewMicroTime(time time.Time) MicroTime {
-	return MicroTime{time}
+func NewMicroTime(time time.Time) *MicroTime {
+	return &MicroTime{time}
 }
 
 // DateMicro returns the MicroTime corresponding to the supplied parameters
 // by wrapping time.Date.
-func DateMicro(year int, month time.Month, day, hour, min, sec, nsec int, loc *time.Location) MicroTime {
-	return MicroTime{time.Date(year, month, day, hour, min, sec, nsec, loc)}
+func DateMicro(year int, month time.Month, day, hour, min, sec, nsec int, loc *time.Location) *MicroTime {
+	return &MicroTime{time.Date(year, month, day, hour, min, sec, nsec, loc)}
 }
 
 // NowMicro returns the current local time.
-func NowMicro() MicroTime {
-	return MicroTime{time.Now()}
+func NowMicro() *MicroTime {
+	return &MicroTime{time.Now()}
 }
 
 // IsZero returns true if the value is nil or time is zero.
@@ -95,8 +95,8 @@ func (t *MicroTime) EqualTime(u *Time) bool {
 
 // UnixMicro returns the local time corresponding to the given Unix time
 // by wrapping time.Unix.
-func UnixMicro(sec int64, nsec int64) MicroTime {
-	return MicroTime{time.Unix(sec, nsec)}
+func UnixMicro(sec int64, nsec int64) *MicroTime {
+	return &MicroTime{time.Unix(sec, nsec)}
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface.
@@ -140,7 +140,7 @@ func (t *MicroTime) UnmarshalQueryParameter(str string) error {
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (t MicroTime) MarshalJSON() ([]byte, error) {
+func (t *MicroTime) MarshalJSON() ([]byte, error) {
 	if t.IsZero() {
 		// Encode unset/nil objects as JSON's "null".
 		return []byte("null"), nil
@@ -149,7 +149,7 @@ func (t MicroTime) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.UTC().Format(RFC3339Micro))
 }
 
-func (_ MicroTime) OpenAPIDefinition() openapi.OpenAPIDefinition {
+func (_ *MicroTime) OpenAPIDefinition() openapi.OpenAPIDefinition {
 	return openapi.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -161,7 +161,7 @@ func (_ MicroTime) OpenAPIDefinition() openapi.OpenAPIDefinition {
 }
 
 // MarshalQueryParameter converts to a URL query parameter value
-func (t MicroTime) MarshalQueryParameter() (string, error) {
+func (t *MicroTime) MarshalQueryParameter() (string, error) {
 	if t.IsZero() {
 		// Encode unset/nil objects as an empty string
 		return "", nil
