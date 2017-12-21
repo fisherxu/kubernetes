@@ -49,7 +49,7 @@ import (
 	api "k8s.io/kubernetes/pkg/apis/core"
 	"k8s.io/kubernetes/pkg/apis/core/helper"
 	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/apis/networking"
+	networkingv1 "k8s.io/api/networking/v1"	
 	"k8s.io/kubernetes/pkg/apis/policy"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/apis/storage"
@@ -353,7 +353,7 @@ func AddHandlers(h printers.PrintHandler) {
 
 	networkPolicyColumnDefinitioins := []metav1alpha1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
-		{Name: "Pod-Selector", Type: "string", Description: extensionsv1beta1.NetworkPolicySpec{}.SwaggerDoc()["podSelector"]},
+		{Name: "Pod-Selector", Type: "string", Description: networkingv1.NetworkPolicySpec{}.SwaggerDoc()["podSelector"]},
 		{Name: "Age", Type: "string", Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"]},
 	}
 	h.TableHandler(networkPolicyColumnDefinitioins, printNetworkPolicy)
@@ -1605,7 +1605,7 @@ func printPodSecurityPolicyList(list *extensions.PodSecurityPolicyList, options 
 	return rows, nil
 }
 
-func printNetworkPolicy(obj *networking.NetworkPolicy, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
+func printNetworkPolicy(obj *networkingv1.NetworkPolicy, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
 	row := metav1alpha1.TableRow{
 		Object: runtime.RawExtension{Object: obj},
 	}
@@ -1613,7 +1613,7 @@ func printNetworkPolicy(obj *networking.NetworkPolicy, options printers.PrintOpt
 	return []metav1alpha1.TableRow{row}, nil
 }
 
-func printNetworkPolicyList(list *networking.NetworkPolicyList, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
+func printNetworkPolicyList(list *networkingv1.NetworkPolicyList, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
 	rows := make([]metav1alpha1.TableRow, 0, len(list.Items))
 	for i := range list.Items {
 		r, err := printNetworkPolicy(&list.Items[i], options)
