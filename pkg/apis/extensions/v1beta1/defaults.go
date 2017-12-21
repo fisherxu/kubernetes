@@ -17,7 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -129,25 +128,5 @@ func SetDefaults_ReplicaSet(obj *extensionsv1beta1.ReplicaSet) {
 	if obj.Spec.Replicas == nil {
 		obj.Spec.Replicas = new(int32)
 		*obj.Spec.Replicas = 1
-	}
-}
-
-func SetDefaults_NetworkPolicy(obj *extensionsv1beta1.NetworkPolicy) {
-	// Default any undefined Protocol fields to TCP.
-	for _, i := range obj.Spec.Ingress {
-		for _, p := range i.Ports {
-			if p.Protocol == nil {
-				proto := v1.ProtocolTCP
-				p.Protocol = &proto
-			}
-		}
-	}
-
-	if len(obj.Spec.PolicyTypes) == 0 {
-		// Any policy that does not specify policyTypes implies at least "Ingress".
-		obj.Spec.PolicyTypes = []extensionsv1beta1.PolicyType{extensionsv1beta1.PolicyTypeIngress}
-		if len(obj.Spec.Egress) != 0 {
-			obj.Spec.PolicyTypes = append(obj.Spec.PolicyTypes, extensionsv1beta1.PolicyTypeEgress)
-		}
 	}
 }
