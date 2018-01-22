@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ type CrV1Interface interface {
 	ExamplesGetter
 }
 
-// CrV1Client is used to interact with features provided by the cr.client-go.k8s.io group.
+// CrV1Client is used to interact with features provided by the cr.example.apiextensions.k8s.io group.
 type CrV1Client struct {
 	restClient rest.Interface
 }

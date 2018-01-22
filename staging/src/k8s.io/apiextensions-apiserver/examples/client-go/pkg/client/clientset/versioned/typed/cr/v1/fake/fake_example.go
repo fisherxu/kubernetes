@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@ type FakeExamples struct {
 	ns   string
 }
 
-var examplesResource = schema.GroupVersionResource{Group: "cr.client-go.k8s.io", Version: "v1", Resource: "examples"}
+var examplesResource = schema.GroupVersionResource{Group: "cr.example.apiextensions.k8s.io", Version: "v1", Resource: "examples"}
 
-var examplesKind = schema.GroupVersionKind{Group: "cr.client-go.k8s.io", Version: "v1", Kind: "Example"}
+var examplesKind = schema.GroupVersionKind{Group: "cr.example.apiextensions.k8s.io", Version: "v1", Kind: "Example"}
 
 // Get takes name of the example, and returns the corresponding example object, and an error if there is any.
 func (c *FakeExamples) Get(name string, options v1.GetOptions) (result *cr_v1.Example, err error) {
