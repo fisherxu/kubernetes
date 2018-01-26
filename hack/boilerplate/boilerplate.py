@@ -133,6 +133,20 @@ skipped_dirs = ['Godeps', 'third_party', '_gopath', '_output', '.git', 'cluster/
                 "vendor", "test/e2e/generated/bindata.go", "hack/boilerplate/test",
                 "pkg/generated/bindata.go"]
 
+# list all the dirs that contain generated files
+generated_dirs = ['pkg/client/listers', 'pkg/client/clientset_generated', 'pkg/client/informers', 'k8s.io/sample-controller/pkg/client/listers',
+                  'k8s.io/sample-controller/pkg/client/clientset', 'k8s.io/sample-controller/pkg/client/informers',
+                  'k8s.io/code-generator/_examples/crd/listers', 'k8s.io/code-generator/_examples/crd/clientset',
+                  'k8s.io/code-generator/_examples/crd/informers', 'k8s.io/code-generator/_examples/apiserver/listers',
+                  'k8s.io/code-generator/_examples/apiserver/clientset', 'k8s.io/code-generator/_examples/apiserver/informers',
+                  'k8s.io/kube-aggregator/pkg/client', 'k8s.io/client-go/kubernetes',
+                  'k8s.io/client-go/listers', 'k8s.io/client-go/informers', 'k8s.io/apiextensions-apiserver/examples/client-go/pkg/client',
+                  'k8s.io/apiextensions-apiserver/pkg/client', 'k8s.io/sample-apiserver/pkg/client']
+
+# list all the files that are ungenerated
+skipped_ungenerated_files = ['test/e2e/apimachinery/generated_clientset.go', 'pkg/client/listers/batch/internalversion/job_test.go',
+                             'pkg/client/clientset_generated/internalclientset/scheme/register_custom.go', 'k8s.io/client-go/kubernetes/import.go']
+
 def normalize_files(files):
     newfiles = []
     for pathname in files:
@@ -183,14 +197,84 @@ def get_regexs():
     regexs["shebang"] = re.compile(r"^(#!.*\n)\n*", re.MULTILINE)
     return regexs
 
+def generated_files(filename):
+    for d in skipped_ungenerated_files:
+        if d in filename:
+            return False
+
+    basename = os.path.basename(filename)
+    if '.sh' in basename:
+        return False
+    elif '_generated' in basename or '.pb.go' in basename or 'generated_' in basename:
+        return True
+    elif 'expansion' in basename:
+        return False
+
+    for d in generated_dirs:
+        if d in filename:
+            return True
+
+    return False
+
+def generated_file_passes(filename, refs, regexs):
+    try:
+        f = open(filename, 'r')
+    except Exception as exc:
+        print("Unable to open %s: %s" % (filename, exc), file=verbose_out)
+        return False
+
+    data = f.read()
+    f.close()
+
+    extension = "generatego"
+    ref = refs[extension]
+
+    # remove build tags from the top of Go files
+    p = regexs["go_build_constraints"]
+    (data, found) = p.subn("", data, 1)
+
+    data = data.splitlines()
+
+    # if our test file is smaller than the reference it surely fails!
+    if len(ref) > len(data):
+        print('File %s smaller than reference (%d < %d)' %
+              (filename, len(data), len(ref)),
+              file=verbose_out)
+        return False
+
+    # trim our file to the same number of lines as the reference file
+    data = data[:len(ref)]
+
+    p = regexs["year"]
+    for d in data:
+        if p.search(d):
+            print('File %s is missing the year' % filename, file=verbose_out)
+            return False
+
+    # if we don't match the reference at this point, fail
+    if ref != data:
+        print("Header in %s does not match reference, diff:" % filename, file=verbose_out)
+        if args.verbose:
+            print(file=verbose_out)
+            for line in difflib.unified_diff(ref, data, 'reference', filename, lineterm=''):
+                print(line, file=verbose_out)
+            print(file=verbose_out)
+        return False
+
+    return True
+
 def main():
     regexs = get_regexs()
     refs = get_refs()
     filenames = get_files(refs.keys())
 
     for filename in filenames:
-        if not file_passes(filename, refs, regexs):
-            print(filename, file=sys.stdout)
+        if generated_files(filename):
+            if not generated_file_passes(filename, refs, regexs):
+                print(filename, file=sys.stdout)
+        else:
+            if not file_passes(filename, refs, regexs):
+                print(filename, file=sys.stdout)
 
     return 0
 
