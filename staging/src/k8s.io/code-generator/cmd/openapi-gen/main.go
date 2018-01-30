@@ -36,7 +36,7 @@ func main() {
 
 	// Override defaults.
 	// TODO: move this out of openapi-gen
-	genericArgs.GoHeaderFilePath = filepath.Join(args.DefaultSourceTree(), "k8s.io/kubernetes/hack/boilerplate/boilerplate.go.txt")
+	genericArgs.GoHeaderFilePath = filepath.Join(args.DefaultSourceTree(), "k8s.io/kubernetes/hack/boilerplate/boilerplate.generatego.txt")
 
 	genericArgs.AddFlags(pflag.CommandLine)
 	customArgs.AddFlags(pflag.CommandLine)

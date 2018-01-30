@@ -34,7 +34,7 @@ func main() {
 
 	// Override defaults.
 	// TODO: move this out of client-gen
-	genericArgs.GoHeaderFilePath = filepath.Join(args.DefaultSourceTree(), "k8s.io/kubernetes/hack/boilerplate/boilerplate.go.txt")
+	genericArgs.GoHeaderFilePath = filepath.Join(args.DefaultSourceTree(), "k8s.io/kubernetes/hack/boilerplate/boilerplate.generatego.txt")
 	genericArgs.OutputPackagePath = "k8s.io/kubernetes/pkg/client/clientset_generated/"
 
 	genericArgs.AddFlags(pflag.CommandLine)
