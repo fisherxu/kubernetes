@@ -10,7 +10,6 @@ go_library(
     srcs = [
         "doc.go",
         "fake_authorization_client.go",
-        "fake_generated_expansion.go",
         "fake_localsubjectaccessreview.go",
         "fake_localsubjectaccessreview_expansion.go",
         "fake_selfsubjectaccessreview.go",
