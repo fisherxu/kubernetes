@@ -197,7 +197,11 @@ def get_regexs():
     regexs["shebang"] = re.compile(r"^(#!.*\n)\n*", re.MULTILINE)
     return regexs
 
-def generated_files(filename):
+# Determine whether the file is automatically generated, only focus on
+# the GO files. All the files except the filename contain 'expansion'
+# or in the skipped_ungenerated_files list, all the rest in generated_dirs list,
+# or filename contain '_generated', 'generated_' and '.pb.go' are all automatically generated.
+def is_generated_files(filename):
     for d in skipped_ungenerated_files:
         if d in filename:
             return False
@@ -205,7 +209,7 @@ def generated_files(filename):
     basename = os.path.basename(filename)
     if '.sh' in basename:
         return False
-    elif '_generated' in basename or '.pb.go' in basename or 'generated_' in basename:
+    elif '_generated' in basename or 'generated_' in basename or '.pb.go' in basename:
         return True
     elif 'expansion' in basename:
         return False
@@ -269,7 +273,9 @@ def main():
     filenames = get_files(refs.keys())
 
     for filename in filenames:
-        if generated_files(filename):
+        # if the file is automatically generated, then don't
+        # check the YEAR field.
+        if is_generated_files(filename):
             if not generated_file_passes(filename, refs, regexs):
                 print(filename, file=sys.stdout)
         else:
