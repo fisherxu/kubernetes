@@ -200,7 +200,7 @@ def get_regexs():
 # Determine whether the file is automatically generated, only focus on
 # the GO files. All the files except the filename contain 'expansion'
 # or in the skipped_ungenerated_files list, all the rest in generated_dirs list,
-# or filename contain '_generated', 'generated_' and '.pb.go' are all automatically generated.
+# or filename contain '_generated', 'generated_' and '.pb.go' are automatically generated.
 def is_generated_files(filename):
     for d in skipped_ungenerated_files:
         if d in filename:
