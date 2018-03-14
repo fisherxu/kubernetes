@@ -144,12 +144,12 @@ func describerMap(c clientset.Interface) map[schema.GroupKind]printers.Describer
 		extensions.Kind("PodSecurityPolicy"):           &PodSecurityPolicyDescriber{c},
 		autoscaling.Kind("HorizontalPodAutoscaler"):    &HorizontalPodAutoscalerDescriber{c},
 		extensions.Kind("DaemonSet"):                   &DaemonSetDescriber{c},
-		extensions.Kind("Deployment"):                  &DeploymentDescriber{c, versionedExtensionsClientV1beta1(c)},
+		extensions.Kind("Deployment"):                  &DeploymentDescriber{c, versionedAppsClientV1(c)},
 		extensions.Kind("Ingress"):                     &IngressDescriber{c},
 		batch.Kind("Job"):                              &JobDescriber{c},
 		batch.Kind("CronJob"):                          &CronJobDescriber{c},
 		apps.Kind("StatefulSet"):                       &StatefulSetDescriber{c},
-		apps.Kind("Deployment"):                        &DeploymentDescriber{c, versionedExtensionsClientV1beta1(c)},
+		apps.Kind("Deployment"):                        &DeploymentDescriber{c, versionedAppsClientV1(c)},
 		apps.Kind("DaemonSet"):                         &DaemonSetDescriber{c},
 		apps.Kind("ReplicaSet"):                        &ReplicaSetDescriber{c},
 		certificates.Kind("CertificateSigningRequest"): &CertificateSigningRequestDescriber{c},
@@ -3945,11 +3945,11 @@ func (list SortableVolumeDevices) Less(i, j int) bool {
 }
 
 // TODO: get rid of this and plumb the caller correctly
-func versionedExtensionsClientV1beta1(internalClient clientset.Interface) clientextensionsv1beta1.ExtensionsV1beta1Interface {
+func versionedAppsClientV1(internalClient clientset.Interface) clientappsv1.AppsV1Interface {
 	if internalClient == nil {
-		return &clientextensionsv1beta1.ExtensionsV1beta1Client{}
+		return &clientappsv1.AppsV1Client{}
 	}
-	return clientextensionsv1beta1.New(internalClient.Extensions().RESTClient())
+	return clientappsv1.New(internalClient.Apps().RESTClient())
 }
 
 var maxAnnotationLen = 200
