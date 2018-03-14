@@ -33,7 +33,7 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/fatih/camelcase"
-	versionedextension "k8s.io/api/extensions/v1beta1"
+	versionedapps "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -45,7 +45,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/dynamic"
-	clientextensionsv1beta1 "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"k8s.io/kubernetes/pkg/api/events"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 	"k8s.io/kubernetes/pkg/api/ref"
@@ -3047,11 +3047,11 @@ func DescribeEvents(el *api.EventList, w PrefixWriter) {
 // DeploymentDescriber generates information about a deployment.
 type DeploymentDescriber struct {
 	clientset.Interface
-	extensionV1beta1Client clientextensionsv1beta1.ExtensionsV1beta1Interface
+	appsV1Client clientappsv1.AppsV1Interface
 }
 
 func (dd *DeploymentDescriber) Describe(namespace, name string, describerSettings printers.DescriberSettings) (string, error) {
-	d, err := dd.extensionV1beta1Client.Deployments(namespace).Get(name, metav1.GetOptions{})
+	d, err := dd.appsV1Client.Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -3072,7 +3072,7 @@ func (dd *DeploymentDescriber) Describe(namespace, name string, describerSetting
 	return describeDeployment(d, selector, internalDeployment, events, dd)
 }
 
-func describeDeployment(d *versionedextension.Deployment, selector labels.Selector, internalDeployment *extensions.Deployment, events *api.EventList, dd *DeploymentDescriber) (string, error) {
+func describeDeployment(d *versionedapps.Deployment, selector labels.Selector, internalDeployment *extensions.Deployment, events *api.EventList, dd *DeploymentDescriber) (string, error) {
 	return tabbedString(func(out io.Writer) error {
 		w := NewPrefixWriter(out)
 		w.Write(LEVEL_0, "Name:\t%s\n", d.ObjectMeta.Name)
@@ -3096,10 +3096,10 @@ func describeDeployment(d *versionedextension.Deployment, selector labels.Select
 				w.Write(LEVEL_1, "%v \t%v\t%v\n", c.Type, c.Status, c.Reason)
 			}
 		}
-		oldRSs, _, newRS, err := deploymentutil.GetAllReplicaSets(d, dd.extensionV1beta1Client)
+		oldRSs, _, newRS, err := deploymentutil.GetAllReplicaSets(d, dd.appsV1Client)
 		if err == nil {
 			w.Write(LEVEL_0, "OldReplicaSets:\t%s\n", printReplicaSetsByLabels(oldRSs))
-			var newRSs []*versionedextension.ReplicaSet
+			var newRSs []*versionedapps.ReplicaSet
 			if newRS != nil {
 				newRSs = append(newRSs, newRS)
 			}
@@ -3113,7 +3113,7 @@ func describeDeployment(d *versionedextension.Deployment, selector labels.Select
 	})
 }
 
-func printReplicaSetsByLabels(matchingRSs []*versionedextension.ReplicaSet) string {
+func printReplicaSetsByLabels(matchingRSs []*versionedapps.ReplicaSet) string {
 	// Format the matching ReplicaSets into strings.
 	rsStrings := make([]string, 0, len(matchingRSs))
 	for _, rs := range matchingRSs {
