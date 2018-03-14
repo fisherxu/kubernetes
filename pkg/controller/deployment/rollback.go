@@ -22,13 +22,13 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	apps "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	deploymentutil "k8s.io/kubernetes/pkg/controller/deployment/util"
 )
 
 // rollback the deployment to the specified revision. In any case cleanup the rollback spec.
-func (dc *DeploymentController) rollback(d *extensions.Deployment, rsList []*extensions.ReplicaSet, podMap map[types.UID]*v1.PodList) error {
+func (dc *DeploymentController) rollback(d *apps.Deployment, rsList []*apps.ReplicaSet, podMap map[types.UID]*v1.PodList) error {
 	newRS, allOldRSs, err := dc.getAllReplicaSetsAndSyncRevision(d, rsList, podMap, true)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (dc *DeploymentController) rollback(d *extensions.Deployment, rsList []*ext
 // rollbackToTemplate compares the templates of the provided deployment and replica set and
 // updates the deployment with the replica set template in case they are different. It also
 // cleans up the rollback spec so subsequent requeues of the deployment won't end up in here.
-func (dc *DeploymentController) rollbackToTemplate(d *extensions.Deployment, rs *extensions.ReplicaSet) (bool, error) {
+func (dc *DeploymentController) rollbackToTemplate(d *apps.Deployment, rs *apps.ReplicaSet) (bool, error) {
 	performedRollback := false
 	if !deploymentutil.EqualIgnoreHash(&d.Spec.Template, &rs.Spec.Template) {
 		glog.V(4).Infof("Rolling back deployment %q to template spec %+v", d.Name, rs.Spec.Template.Spec)
@@ -98,20 +98,20 @@ func (dc *DeploymentController) rollbackToTemplate(d *extensions.Deployment, rs 
 	return performedRollback, dc.updateDeploymentAndClearRollbackTo(d)
 }
 
-func (dc *DeploymentController) emitRollbackWarningEvent(d *extensions.Deployment, reason, message string) {
+func (dc *DeploymentController) emitRollbackWarningEvent(d *apps.Deployment, reason, message string) {
 	dc.eventRecorder.Eventf(d, v1.EventTypeWarning, reason, message)
 }
 
-func (dc *DeploymentController) emitRollbackNormalEvent(d *extensions.Deployment, message string) {
+func (dc *DeploymentController) emitRollbackNormalEvent(d *apps.Deployment, message string) {
 	dc.eventRecorder.Eventf(d, v1.EventTypeNormal, deploymentutil.RollbackDone, message)
 }
 
 // updateDeploymentAndClearRollbackTo sets .spec.rollbackTo to nil and update the input deployment
 // It is assumed that the caller will have updated the deployment template appropriately (in case
 // we want to rollback).
-func (dc *DeploymentController) updateDeploymentAndClearRollbackTo(d *extensions.Deployment) error {
+func (dc *DeploymentController) updateDeploymentAndClearRollbackTo(d *apps.Deployment) error {
 	glog.V(4).Infof("Cleans up rollbackTo of deployment %q", d.Name)
 	d.Spec.RollbackTo = nil
-	_, err := dc.client.ExtensionsV1beta1().Deployments(d.Namespace).Update(d)
+	_, err := dc.client.AppsV1().Deployments(d.Namespace).Update(d)
 	return err
 }
