@@ -27,6 +27,7 @@ import (
 
 	"k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	apps "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -109,7 +110,7 @@ func failureTrap(c clientset.Interface, ns string) {
 		d := deployments.Items[i]
 
 		framework.Logf(spew.Sprintf("Deployment %q:\n%+v\n", d.Name, d))
-		_, allOldRSs, newRS, err := deploymentutil.GetAllReplicaSets(&d, c.ExtensionsV1beta1())
+		_, allOldRSs, newRS, err := deploymentutil.GetAllReplicaSets(&d, c.AppsV1())
 		if err != nil {
 			framework.Logf("Could not list ReplicaSets for Deployment %q: %v", d.Name, err)
 			return
@@ -221,7 +222,7 @@ func testDeleteDeployment(f *framework.Framework) {
 
 	deployment, err := c.ExtensionsV1beta1().Deployments(ns).Get(deploymentName, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	newRS, err := deploymentutil.GetNewReplicaSet(deployment, c.ExtensionsV1beta1())
+	newRS, err := deploymentutil.GetNewReplicaSet(deployment, c.AppsV1())
 	Expect(err).NotTo(HaveOccurred())
 	Expect(newRS).NotTo(Equal(nilRs))
 	stopDeployment(c, internalClient, ns, deploymentName)
@@ -245,7 +246,7 @@ func testRollingUpdateDeployment(f *framework.Framework) {
 	rs := newRS(rsName, replicas, rsPodLabels, NginxImageName, NginxImage)
 	rs.Annotations = annotations
 	framework.Logf("Creating replica set %q (going to be adopted)", rs.Name)
-	_, err := c.ExtensionsV1beta1().ReplicaSets(ns).Create(rs)
+	_, err := c.AppsV1().ReplicaSets(ns).Create(rs)
 	Expect(err).NotTo(HaveOccurred())
 	// Verify that the required pods have come up.
 	err = framework.VerifyPodsRunning(c, ns, "sample-pod", false, replicas)
@@ -271,7 +272,7 @@ func testRollingUpdateDeployment(f *framework.Framework) {
 	framework.Logf("Ensuring deployment %q has one old replica set (the one it adopted)", deploy.Name)
 	deployment, err := c.ExtensionsV1beta1().Deployments(ns).Get(deploymentName, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	_, allOldRSs, err := deploymentutil.GetOldReplicaSets(deployment, c.ExtensionsV1beta1())
+	_, allOldRSs, err := deploymentutil.GetOldReplicaSets(deployment, c.AppsV1())
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(allOldRSs)).Should(Equal(1))
 	// The old RS should contain pod-template-hash in its selector, label, and template label
@@ -324,7 +325,7 @@ func testDeploymentCleanUpPolicy(f *framework.Framework) {
 	rsName := "test-cleanup-controller"
 	replicas := int32(1)
 	revisionHistoryLimit := utilpointer.Int32Ptr(0)
-	_, err := c.ExtensionsV1beta1().ReplicaSets(ns).Create(newRS(rsName, replicas, rsPodLabels, NginxImageName, NginxImage))
+	_, err := c.AppsV1().ReplicaSets(ns).Create(newRS(rsName, replicas, rsPodLabels, NginxImageName, NginxImage))
 	Expect(err).NotTo(HaveOccurred())
 
 	// Verify that the required pods have come up.
@@ -395,7 +396,7 @@ func testRolloverDeployment(f *framework.Framework) {
 
 	rsName := "test-rollover-controller"
 	rsReplicas := int32(1)
-	_, err := c.ExtensionsV1beta1().ReplicaSets(ns).Create(newRS(rsName, rsReplicas, rsPodLabels, NginxImageName, NginxImage))
+	_, err := c.AppsV1().ReplicaSets(ns).Create(newRS(rsName, rsReplicas, rsPodLabels, NginxImageName, NginxImage))
 	Expect(err).NotTo(HaveOccurred())
 	// Verify that the required pods have come up.
 	err = framework.VerifyPodsRunning(c, ns, podName, false, rsReplicas)
@@ -433,10 +434,10 @@ func testRolloverDeployment(f *framework.Framework) {
 	Expect(err).NotTo(HaveOccurred())
 
 	framework.Logf("Ensure that both replica sets have 1 created replica")
-	oldRS, err := c.ExtensionsV1beta1().ReplicaSets(ns).Get(rsName, metav1.GetOptions{})
+	oldRS, err := c.AppsV1().ReplicaSets(ns).Get(rsName, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	ensureReplicas(oldRS, int32(1))
-	newRS, err := deploymentutil.GetNewReplicaSet(deployment, c.ExtensionsV1beta1())
+	newRS, err := deploymentutil.GetNewReplicaSet(deployment, c.AppsV1())
 	Expect(err).NotTo(HaveOccurred())
 	ensureReplicas(newRS, int32(1))
 
@@ -464,16 +465,16 @@ func testRolloverDeployment(f *framework.Framework) {
 	Expect(err).NotTo(HaveOccurred())
 
 	framework.Logf("Ensure that both old replica sets have no replicas")
-	oldRS, err = c.ExtensionsV1beta1().ReplicaSets(ns).Get(rsName, metav1.GetOptions{})
+	oldRS, err = c.AppsV1().ReplicaSets(ns).Get(rsName, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	ensureReplicas(oldRS, int32(0))
 	// Not really the new replica set anymore but we GET by name so that's fine.
-	newRS, err = c.ExtensionsV1beta1().ReplicaSets(ns).Get(newRS.Name, metav1.GetOptions{})
+	newRS, err = c.AppsV1().ReplicaSets(ns).Get(newRS.Name, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	ensureReplicas(newRS, int32(0))
 }
 
-func ensureReplicas(rs *extensions.ReplicaSet, replicas int32) {
+func ensureReplicas(rs *apps.ReplicaSet, replicas int32) {
 	Expect(*rs.Spec.Replicas).Should(Equal(replicas))
 	Expect(rs.Status.Replicas).Should(Equal(replicas))
 }
@@ -834,7 +835,7 @@ func testProportionalScalingDeployment(f *framework.Framework) {
 	framework.Logf("Waiting for deployment %q to complete", deployment.Name)
 	Expect(framework.WaitForDeploymentComplete(c, deployment)).NotTo(HaveOccurred())
 
-	firstRS, err := deploymentutil.GetNewReplicaSet(deployment, c.ExtensionsV1beta1())
+	firstRS, err := deploymentutil.GetNewReplicaSet(deployment, c.AppsV1())
 	Expect(err).NotTo(HaveOccurred())
 
 	// Update the deployment with a non-existent image so that the new replica set
@@ -863,13 +864,13 @@ func testProportionalScalingDeployment(f *framework.Framework) {
 
 	// The desired replicas wait makes sure that the RS controller has created expected number of pods.
 	framework.Logf("Waiting for the first rollout's replicaset of deployment %q to have desired number of replicas", deploymentName)
-	firstRS, err = c.ExtensionsV1beta1().ReplicaSets(ns).Get(firstRS.Name, metav1.GetOptions{})
+	firstRS, err = c.AppsV1().ReplicaSets(ns).Get(firstRS.Name, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	err = framework.WaitForReplicaSetDesiredReplicas(c.ExtensionsV1beta1(), firstRS)
+	err = framework.WaitForReplicaSetDesiredReplicas(c.AppsV1(), firstRS)
 	Expect(err).NotTo(HaveOccurred())
 
 	// Checking state of second rollout's replicaset.
-	secondRS, err := deploymentutil.GetNewReplicaSet(deployment, c.ExtensionsV1beta1())
+	secondRS, err := deploymentutil.GetNewReplicaSet(deployment, c.AppsV1())
 	Expect(err).NotTo(HaveOccurred())
 
 	maxSurge, err := intstr.GetValueFromIntOrPercent(deployment.Spec.Strategy.RollingUpdate.MaxSurge, int(*(deployment.Spec.Replicas)), false)
@@ -886,9 +887,9 @@ func testProportionalScalingDeployment(f *framework.Framework) {
 
 	// The desired replicas wait makes sure that the RS controller has created expected number of pods.
 	framework.Logf("Waiting for the second rollout's replicaset of deployment %q to have desired number of replicas", deploymentName)
-	secondRS, err = c.ExtensionsV1beta1().ReplicaSets(ns).Get(secondRS.Name, metav1.GetOptions{})
+	secondRS, err = c.AppsV1().ReplicaSets(ns).Get(secondRS.Name, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	err = framework.WaitForReplicaSetDesiredReplicas(c.ExtensionsV1beta1(), secondRS)
+	err = framework.WaitForReplicaSetDesiredReplicas(c.AppsV1(), secondRS)
 	Expect(err).NotTo(HaveOccurred())
 
 	// Check the deployment's minimum availability.
@@ -906,9 +907,9 @@ func testProportionalScalingDeployment(f *framework.Framework) {
 	Expect(err).NotTo(HaveOccurred())
 
 	framework.Logf("Waiting for the replicasets of deployment %q to have desired number of replicas", deploymentName)
-	firstRS, err = c.ExtensionsV1beta1().ReplicaSets(ns).Get(firstRS.Name, metav1.GetOptions{})
+	firstRS, err = c.AppsV1().ReplicaSets(ns).Get(firstRS.Name, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	secondRS, err = c.ExtensionsV1beta1().ReplicaSets(ns).Get(secondRS.Name, metav1.GetOptions{})
+	secondRS, err = c.AppsV1().ReplicaSets(ns).Get(secondRS.Name, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
 	// First rollout's replicaset should have .spec.replicas = 8 + (30-10)*(8/13) = 8 + 12 = 20 replicas.

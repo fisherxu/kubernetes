@@ -22,18 +22,18 @@ import (
 	. "github.com/onsi/ginkgo"
 
 	"k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	apps "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
-	extensionsclient "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"
+	appsclient "k8s.io/client-go/kubernetes/typed/apps/v1"
 	deploymentutil "k8s.io/kubernetes/pkg/controller/deployment/util"
 	testutils "k8s.io/kubernetes/test/utils"
 )
 
-type updateRsFunc func(d *extensions.ReplicaSet)
+type updateRsFunc func(d *apps.ReplicaSet)
 
-func UpdateReplicaSetWithRetries(c clientset.Interface, namespace, name string, applyUpdate testutils.UpdateReplicaSetFunc) (*extensions.ReplicaSet, error) {
+func UpdateReplicaSetWithRetries(c clientset.Interface, namespace, name string, applyUpdate testutils.UpdateReplicaSetFunc) (*apps.ReplicaSet, error) {
 	return testutils.UpdateReplicaSetWithRetries(c, namespace, name, applyUpdate, Logf, Poll, pollShortTimeout)
 }
 
@@ -43,7 +43,7 @@ func CheckNewRSAnnotations(c clientset.Interface, ns, deploymentName string, exp
 	if err != nil {
 		return err
 	}
-	newRS, err := deploymentutil.GetNewReplicaSet(deployment, c.ExtensionsV1beta1())
+	newRS, err := deploymentutil.GetNewReplicaSet(deployment, c.AppsV1())
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func WaitForReadyReplicaSet(c clientset.Interface, ns, name string) error {
 }
 
 // WaitForReplicaSetDesiredReplicas waits until the replicaset has desired number of replicas.
-func WaitForReplicaSetDesiredReplicas(rsClient extensionsclient.ReplicaSetsGetter, replicaSet *extensions.ReplicaSet) error {
+func WaitForReplicaSetDesiredReplicas(rsClient appsclient.ReplicaSetsGetter, replicaSet *apps.ReplicaSet) error {
 	desiredGeneration := replicaSet.Generation
 	err := wait.PollImmediate(Poll, pollShortTimeout, func() (bool, error) {
 		rs, err := rsClient.ReplicaSets(replicaSet.Namespace).Get(replicaSet.Name, metav1.GetOptions{})
@@ -88,7 +88,7 @@ func WaitForReplicaSetDesiredReplicas(rsClient extensionsclient.ReplicaSetsGette
 }
 
 // WaitForReplicaSetTargetSpecReplicas waits for .spec.replicas of a RS to equal targetReplicaNum
-func WaitForReplicaSetTargetSpecReplicas(c clientset.Interface, replicaSet *extensions.ReplicaSet, targetReplicaNum int32) error {
+func WaitForReplicaSetTargetSpecReplicas(c clientset.Interface, replicaSet *apps.ReplicaSet, targetReplicaNum int32) error {
 	desiredGeneration := replicaSet.Generation
 	err := wait.PollImmediate(Poll, pollShortTimeout, func() (bool, error) {
 		rs, err := c.ExtensionsV1beta1().ReplicaSets(replicaSet.Namespace).Get(replicaSet.Name, metav1.GetOptions{})
@@ -104,7 +104,7 @@ func WaitForReplicaSetTargetSpecReplicas(c clientset.Interface, replicaSet *exte
 }
 
 // WaitForReplicaSetTargetAvailableReplicas waits for .status.availableReplicas of a RS to equal targetReplicaNum
-func WaitForReplicaSetTargetAvailableReplicas(c clientset.Interface, replicaSet *extensions.ReplicaSet, targetReplicaNum int32) error {
+func WaitForReplicaSetTargetAvailableReplicas(c clientset.Interface, replicaSet *apps.ReplicaSet, targetReplicaNum int32) error {
 	desiredGeneration := replicaSet.Generation
 	err := wait.PollImmediate(Poll, pollShortTimeout, func() (bool, error) {
 		rs, err := c.ExtensionsV1beta1().ReplicaSets(replicaSet.Namespace).Get(replicaSet.Name, metav1.GetOptions{})
@@ -126,8 +126,8 @@ func RunReplicaSet(config testutils.ReplicaSetConfig) error {
 	return testutils.RunReplicaSet(config)
 }
 
-func NewReplicaSet(name, namespace string, replicas int32, podLabels map[string]string, imageName, image string) *extensions.ReplicaSet {
-	return &extensions.ReplicaSet{
+func NewReplicaSet(name, namespace string, replicas int32, podLabels map[string]string, imageName, image string) *apps.ReplicaSet {
+	return &apps.ReplicaSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ReplicaSet",
 			APIVersion: "extensions/v1beta1",
@@ -136,7 +136,7 @@ func NewReplicaSet(name, namespace string, replicas int32, podLabels map[string]
 			Namespace: namespace,
 			Name:      name,
 		},
-		Spec: extensions.ReplicaSetSpec{
+		Spec: apps.ReplicaSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: podLabels,
 			},
