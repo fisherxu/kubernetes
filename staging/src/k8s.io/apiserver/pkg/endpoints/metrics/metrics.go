@@ -129,6 +129,8 @@ const (
 	ReadOnlyKind = "readOnly"
 	// MutatingKind is a string identifying mutating request kind
 	MutatingKind = "mutating"
+	// longRunningKind is a string identifying long-running request kind
+	LongRunningKind = "longRunning"
 )
 
 var registerMetrics sync.Once

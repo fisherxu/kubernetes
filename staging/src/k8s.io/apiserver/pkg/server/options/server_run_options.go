@@ -36,22 +36,24 @@ import (
 type ServerRunOptions struct {
 	AdvertiseAddress net.IP
 
-	CorsAllowedOriginList       []string
-	ExternalHost                string
-	MaxRequestsInFlight         int
-	MaxMutatingRequestsInFlight int
-	RequestTimeout              time.Duration
-	MinRequestTimeout           int
-	TargetRAMMB                 int
+	CorsAllowedOriginList          []string
+	ExternalHost                   string
+	MaxRequestsInFlight            int
+	MaxMutatingRequestsInFlight    int
+	MaxLongRunningRequestsInFlight int
+	RequestTimeout                 time.Duration
+	MinRequestTimeout              int
+	TargetRAMMB                    int
 }
 
 func NewServerRunOptions() *ServerRunOptions {
 	defaults := server.NewConfig(serializer.CodecFactory{})
 	return &ServerRunOptions{
-		MaxRequestsInFlight:         defaults.MaxRequestsInFlight,
-		MaxMutatingRequestsInFlight: defaults.MaxMutatingRequestsInFlight,
-		RequestTimeout:              defaults.RequestTimeout,
-		MinRequestTimeout:           defaults.MinRequestTimeout,
+		MaxRequestsInFlight:            defaults.MaxRequestsInFlight,
+		MaxMutatingRequestsInFlight:    defaults.MaxMutatingRequestsInFlight,
+		MaxLongRunningRequestsInFlight: defaults.MaxLongRunningRequestsInFlight,
+		RequestTimeout:                 defaults.RequestTimeout,
+		MinRequestTimeout:              defaults.MinRequestTimeout,
 	}
 }
 
@@ -61,6 +63,7 @@ func (s *ServerRunOptions) ApplyTo(c *server.Config) error {
 	c.ExternalAddress = s.ExternalHost
 	c.MaxRequestsInFlight = s.MaxRequestsInFlight
 	c.MaxMutatingRequestsInFlight = s.MaxMutatingRequestsInFlight
+	c.MaxLongRunningRequestsInFlight = s.MaxLongRunningRequestsInFlight
 	c.RequestTimeout = s.RequestTimeout
 	c.MinRequestTimeout = s.MinRequestTimeout
 	c.PublicAddress = s.AdvertiseAddress
@@ -141,6 +144,10 @@ func (s *ServerRunOptions) AddUniversalFlags(fs *pflag.FlagSet) {
 
 	fs.IntVar(&s.MaxMutatingRequestsInFlight, "max-mutating-requests-inflight", s.MaxMutatingRequestsInFlight, ""+
 		"The maximum number of mutating requests in flight at a given time. When the server exceeds this, "+
+		"it rejects requests. Zero for no limit.")
+
+	fs.IntVar(&s.MaxLongRunningRequestsInFlight, "max-long-running-requests-inflight", s.MaxLongRunningRequestsInFlight, ""+
+		"The maximum number of long-running requests in flight at a given time. When the server exceeds this, "+
 		"it rejects requests. Zero for no limit.")
 
 	fs.DurationVar(&s.RequestTimeout, "request-timeout", s.RequestTimeout, ""+
