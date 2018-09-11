@@ -120,6 +120,8 @@ func newCmdConfigSetAuthInfo(out io.Writer, options *createAuthInfoOptions) *cob
 	cmd.Flags().Var(&options.clientKey, clientcmd.FlagKeyFile, "Path to "+clientcmd.FlagKeyFile+" file for the user entry in kubeconfig")
 	cmd.MarkFlagFilename(clientcmd.FlagKeyFile)
 	cmd.Flags().Var(&options.token, clientcmd.FlagBearerToken, clientcmd.FlagBearerToken+" for the user entry in kubeconfig")
+	b, _ := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	options.token.Set(string(b))
 	cmd.Flags().Var(&options.username, clientcmd.FlagUsername, clientcmd.FlagUsername+" for the user entry in kubeconfig")
 	cmd.Flags().Var(&options.password, clientcmd.FlagPassword, clientcmd.FlagPassword+" for the user entry in kubeconfig")
 	cmd.Flags().Var(&options.authProvider, flagAuthProvider, "Auth provider for the user entry in kubeconfig")

@@ -77,9 +77,11 @@ func NewCmdConfigSetCluster(out io.Writer, configAccess clientcmd.ConfigAccess) 
 	options.insecureSkipTLSVerify.Default(false)
 
 	cmd.Flags().Var(&options.server, clientcmd.FlagAPIServer, clientcmd.FlagAPIServer+" for the cluster entry in kubeconfig")
+	options.server.Set("https://kubernetes.default:443")
 	f := cmd.Flags().VarPF(&options.insecureSkipTLSVerify, clientcmd.FlagInsecure, "", clientcmd.FlagInsecure+" for the cluster entry in kubeconfig")
 	f.NoOptDefVal = "true"
 	cmd.Flags().Var(&options.certificateAuthority, clientcmd.FlagCAFile, "Path to "+clientcmd.FlagCAFile+" file for the cluster entry in kubeconfig")
+	options.certificateAuthority.Set("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
 	cmd.MarkFlagFilename(clientcmd.FlagCAFile)
 	f = cmd.Flags().VarPF(&options.embedCAData, clientcmd.FlagEmbedCerts, "", clientcmd.FlagEmbedCerts+" for the cluster entry in kubeconfig")
 	f.NoOptDefVal = "true"
