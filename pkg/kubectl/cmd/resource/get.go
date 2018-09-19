@@ -236,6 +236,7 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 	if len(args) > 0 && len(args[0]) > 1 {
 		if args[0][:2] == "no" || args[0][:2] == "pv" {
 			options.Namespace = "default"
+			options.AllNamespaces = false
 			options.ExplicitNamespace = true
 			isset = true
 		}
@@ -244,11 +245,13 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 		if len(args[0]) == 16 && args[0] == "persistentvolume" {
 			options.Namespace = "default"
 			options.ExplicitNamespace = true
+			options.AllNamespaces = false
 			isset = true
 		}
 		if len(args[0]) > 16 && args[0][:17] == "persistentvolumes" {
 			options.Namespace = "default"
 			options.ExplicitNamespace = true
+			options.AllNamespaces = false
 			isset = true
 		}
 	}
@@ -287,10 +290,12 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 		filterFuncs = nil
 	}
 
+	fmt.Println("isgenericcccccccccc")
 	if printer.IsGeneric() {
+		fmt.Println("gogogo")
 		return options.printGeneric(printer, r, filterFuncs, filterOpts)
 	}
-
+	fmt.Println("endddddddddddd")
 	allErrs := []error{}
 	errs := sets.NewString()
 	infos, err := r.Infos()
@@ -298,19 +303,33 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 		allErrs = append(allErrs, err)
 	}
 
+	obj, _ := r.Object()
+	if isset {
+		fmt.Println("enterssssset")
+		if node, ok := obj.(*corev1.Node); ok {
+			fmt.Println("okkkkkkkkkkkkk")
+			node.Namespace = "ssssttt"
+			node.SelfLink = "/api/v1/nodes/" + node.Name
+		} else {
+			fmt.Println()
+			fmt.Println("notokkkkkkkkkkkkk")
+		}
+
+		if node, ok := obj.(*corev1.List); ok {
+			fmt.Println("okkkkkkkkkkkkk")
+			//node.Namespace = "ssssttt"
+			fmt.Println(node.SelfLink)
+			node.SelfLink = "/api/v1/nodes/" + "list"
+			fmt.Println(node.SelfLink)
+		} else {
+			fmt.Println()
+			fmt.Println("notokkkkkkkkkkkkk")
+		}
+	}
+
 	objs := make([]runtime.Object, len(infos))
 	for ix := range infos {
 		objs[ix] = infos[ix].Object
-		if isset {
-			if node, ok := objs[ix].(*corev1.Node); ok {
-				node.Namespace = ""
-				node.SelfLink = "/api/v1/nodes/" + node.Name
-			}
-			if pv, ok := objs[ix].(*corev1.PersistentVolume); ok {
-				pv.Namespace = ""
-				pv.SelfLink = "/api/v1/persistentvolumes/" + pv.Name
-			}
-		}
 	}
 
 	sorting, err := cmd.Flags().GetString("sort-by")
@@ -654,7 +673,9 @@ func (options *GetOptions) printGeneric(printer printers.ResourcePrinter, r *res
 				"metadata":   map[string]interface{}{},
 			},
 		}
+
 		if listMeta, err := meta.ListAccessor(obj); err == nil {
+
 			list.Object["metadata"] = map[string]interface{}{
 				"selfLink":        listMeta.GetSelfLink(),
 				"resourceVersion": listMeta.GetResourceVersion(),
@@ -662,6 +683,18 @@ func (options *GetOptions) printGeneric(printer printers.ResourcePrinter, r *res
 		}
 
 		for _, item := range items {
+			v1obj, _ := meta.Accessor(item)
+			ls := v1obj.GetSelfLink()
+			l := strings.Split(ls, "/")
+			if len(l) == 7 && l[5] == "nodes" {
+				v1obj.SetNamespace("")
+				v1obj.SetSelfLink("/api/v1/nodes" + v1obj.GetName())
+			}
+			if len(l) == 7 && l[5] == "persistentvolumes" {
+				v1obj.SetNamespace("")
+				v1obj.SetSelfLink("/api/v1/persistentvolumes" + v1obj.GetName())
+			}
+
 			list.Items = append(list.Items, *item.(*unstructured.Unstructured))
 		}
 		if err := printer.PrintObj(list, options.Out); err != nil {
