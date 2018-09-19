@@ -25,6 +25,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 
+	corev1 "k8s.io/api/core/v1"
 	kapierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -231,6 +232,26 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 	if options.Watch || options.WatchOnly {
 		return options.watch(f, cmd, args)
 	}
+	isset := false
+	if len(args) > 0 && len(args[0]) > 1 {
+		if args[0][:2] == "no" || args[0][:2] == "pv" {
+			options.Namespace = "default"
+			options.ExplicitNamespace = true
+			isset = true
+		}
+	}
+	if len(args) > 0 && len(args[0]) > 15 {
+		if len(args[0]) == 16 && args[0] == "persistentvolume" {
+			options.Namespace = "default"
+			options.ExplicitNamespace = true
+			isset = true
+		}
+		if len(args[0]) > 16 && args[0][:17] == "persistentvolumes" {
+			options.Namespace = "default"
+			options.ExplicitNamespace = true
+			isset = true
+		}
+	}
 
 	r := f.NewBuilder().
 		Unstructured().
@@ -280,6 +301,16 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 	objs := make([]runtime.Object, len(infos))
 	for ix := range infos {
 		objs[ix] = infos[ix].Object
+		if isset {
+			if node, ok := objs[ix].(*corev1.Node); ok {
+				node.Namespace = ""
+				node.SelfLink = "/api/v1/nodes/" + node.Name
+			}
+			if pv, ok := objs[ix].(*corev1.PersistentVolume); ok {
+				pv.Namespace = ""
+				pv.SelfLink = "/api/v1/persistentvolumes/" + pv.Name
+			}
+		}
 	}
 
 	sorting, err := cmd.Flags().GetString("sort-by")
