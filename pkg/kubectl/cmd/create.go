@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -182,6 +183,26 @@ func RunCreate(f cmdutil.Factory, cmd *cobra.Command, out, errOut io.Writer, opt
 	cmdNamespace, enforceNamespace, err := f.DefaultNamespace()
 	if err != nil {
 		return err
+	}
+
+	var by []byte
+	if options.FilenameOptions.Filenames[0] == "-" {
+		data := os.Stdin
+		data.Write(by)
+	} else {
+		by, err = ioutil.ReadFile(options.FilenameOptions.Filenames[0])
+		if err != nil {
+			return err
+		}
+	}
+
+	if strings.Contains(strings.ToLower(string(by)), "kind: persistentvolume") && !strings.Contains(strings.ToLower(string(by)), "kind: persistentvolumeclaim") {
+		cmdNamespace = "default"
+		enforceNamespace = true
+	}
+	if strings.Contains(string(by), "kind: Node") {
+		cmdNamespace = "default"
+		enforceNamespace = true
 	}
 
 	r := f.NewBuilder().
