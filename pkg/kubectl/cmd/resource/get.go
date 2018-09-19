@@ -25,7 +25,6 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 
-	corev1 "k8s.io/api/core/v1"
 	kapierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -232,13 +231,12 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 	if options.Watch || options.WatchOnly {
 		return options.watch(f, cmd, args)
 	}
-	isset := false
+
 	if len(args) > 0 && len(args[0]) > 1 {
 		if args[0][:2] == "no" || args[0][:2] == "pv" {
 			options.Namespace = "default"
 			options.AllNamespaces = false
 			options.ExplicitNamespace = true
-			isset = true
 		}
 	}
 	if len(args) > 0 && len(args[0]) > 15 {
@@ -246,13 +244,11 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 			options.Namespace = "default"
 			options.ExplicitNamespace = true
 			options.AllNamespaces = false
-			isset = true
 		}
 		if len(args[0]) > 16 && args[0][:17] == "persistentvolumes" {
 			options.Namespace = "default"
 			options.ExplicitNamespace = true
 			options.AllNamespaces = false
-			isset = true
 		}
 	}
 
@@ -290,41 +286,14 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 		filterFuncs = nil
 	}
 
-	fmt.Println("isgenericcccccccccc")
 	if printer.IsGeneric() {
-		fmt.Println("gogogo")
 		return options.printGeneric(printer, r, filterFuncs, filterOpts)
 	}
-	fmt.Println("endddddddddddd")
 	allErrs := []error{}
 	errs := sets.NewString()
 	infos, err := r.Infos()
 	if err != nil {
 		allErrs = append(allErrs, err)
-	}
-
-	obj, _ := r.Object()
-	if isset {
-		fmt.Println("enterssssset")
-		if node, ok := obj.(*corev1.Node); ok {
-			fmt.Println("okkkkkkkkkkkkk")
-			node.Namespace = "ssssttt"
-			node.SelfLink = "/api/v1/nodes/" + node.Name
-		} else {
-			fmt.Println()
-			fmt.Println("notokkkkkkkkkkkkk")
-		}
-
-		if node, ok := obj.(*corev1.List); ok {
-			fmt.Println("okkkkkkkkkkkkk")
-			//node.Namespace = "ssssttt"
-			fmt.Println(node.SelfLink)
-			node.SelfLink = "/api/v1/nodes/" + "list"
-			fmt.Println(node.SelfLink)
-		} else {
-			fmt.Println()
-			fmt.Println("notokkkkkkkkkkkkk")
-		}
 	}
 
 	objs := make([]runtime.Object, len(infos))
@@ -688,11 +657,11 @@ func (options *GetOptions) printGeneric(printer printers.ResourcePrinter, r *res
 			l := strings.Split(ls, "/")
 			if len(l) == 7 && l[5] == "nodes" {
 				v1obj.SetNamespace("")
-				v1obj.SetSelfLink("/api/v1/nodes" + v1obj.GetName())
+				v1obj.SetSelfLink("/api/v1/nodes/" + v1obj.GetName())
 			}
 			if len(l) == 7 && l[5] == "persistentvolumes" {
 				v1obj.SetNamespace("")
-				v1obj.SetSelfLink("/api/v1/persistentvolumes" + v1obj.GetName())
+				v1obj.SetSelfLink("/api/v1/persistentvolumes/" + v1obj.GetName())
 			}
 
 			list.Items = append(list.Items, *item.(*unstructured.Unstructured))
