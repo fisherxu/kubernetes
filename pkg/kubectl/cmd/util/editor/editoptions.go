@@ -175,6 +175,17 @@ func (o *EditOptions) Run() error {
 			switch len(infos) {
 			case 1:
 				originalObj = infos[0].Object
+				v1obj, _ := meta.Accessor(originalObj)
+				ls := v1obj.GetSelfLink()
+				l := strings.Split(ls, "/")
+				if len(l) == 7 && l[5] == "nodes" {
+					v1obj.SetNamespace("")
+					v1obj.SetSelfLink("/api/v1/nodes/" + v1obj.GetName())
+				}
+				if len(l) == 7 && l[5] == "persistentvolumes" {
+					v1obj.SetNamespace("")
+					v1obj.SetSelfLink("/api/v1/persistentvolumes/" + v1obj.GetName())
+				}
 			default:
 				l := &unstructured.UnstructuredList{
 					Object: map[string]interface{}{
@@ -185,6 +196,19 @@ func (o *EditOptions) Run() error {
 				}
 				for _, info := range infos {
 					l.Items = append(l.Items, *info.Object.(*unstructured.Unstructured))
+				}
+				for _, item := range l.Items {
+					v1obj, _ := meta.Accessor(item)
+					ls := v1obj.GetSelfLink()
+					l := strings.Split(ls, "/")
+					if len(l) == 7 && l[5] == "nodes" {
+						v1obj.SetNamespace("")
+						v1obj.SetSelfLink("/api/v1/nodes/" + v1obj.GetName())
+					}
+					if len(l) == 7 && l[5] == "persistentvolumes" {
+						v1obj.SetNamespace("")
+						v1obj.SetSelfLink("/api/v1/persistentvolumes/" + v1obj.GetName())
+					}
 				}
 				originalObj = l
 			}
