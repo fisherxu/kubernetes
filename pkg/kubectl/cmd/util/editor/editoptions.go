@@ -107,6 +107,33 @@ func (o *EditOptions) Complete(f cmdutil.Factory, out, errOut io.Writer, args []
 	if err != nil {
 		return err
 	}
+
+	if len(args) > 0 && len(args[0]) > 1 {
+		if args[0][:2] == "no" {
+			cmdNamespace = "default"
+			enforceNamespace = true
+		}
+		if len(args[0]) == 2 && args[0][:2] == "pv" {
+			cmdNamespace = "default"
+			enforceNamespace = true
+		}
+		if len(args[0]) > 2 && args[0][:2] == "pv" && args[0][:3] != "pvc" {
+			cmdNamespace = "default"
+			enforceNamespace = true
+		}
+	}
+
+	if len(args) > 0 && len(args[0]) > 15 {
+		if len(args[0]) == 16 && args[0] == "persistentvolume" {
+			cmdNamespace = "default"
+			enforceNamespace = true
+		}
+		if len(args[0]) > 16 && args[0][:17] == "persistentvolumes" {
+			cmdNamespace = "default"
+			enforceNamespace = true
+		}
+	}
+
 	mapper, _ := f.Object()
 	b := f.NewBuilder().
 		Unstructured()
