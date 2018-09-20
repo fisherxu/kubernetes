@@ -233,12 +233,23 @@ func (options *GetOptions) Run(f cmdutil.Factory, cmd *cobra.Command, args []str
 	}
 
 	if len(args) > 0 && len(args[0]) > 1 {
-		if args[0][:2] == "no" || args[0][:2] == "pv" {
+		if args[0][:2] == "no" {
+			options.Namespace = "default"
+			options.AllNamespaces = false
+			options.ExplicitNamespace = true
+		}
+		if len(args[0]) == 2 && args[0][:2] == "pv" {
+			options.Namespace = "default"
+			options.AllNamespaces = false
+			options.ExplicitNamespace = true
+		}
+		if len(args[0]) > 2 && args[0][:2] == "pv" && args[0][:3] != "pvc" {
 			options.Namespace = "default"
 			options.AllNamespaces = false
 			options.ExplicitNamespace = true
 		}
 	}
+
 	if len(args) > 0 && len(args[0]) > 15 {
 		if len(args[0]) == 16 && args[0] == "persistentvolume" {
 			options.Namespace = "default"
