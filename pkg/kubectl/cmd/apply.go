@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -47,6 +48,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubectl/resource"
 	"k8s.io/kubernetes/pkg/kubectl/scheme"
 	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
+	"os"
 )
 
 type ApplyOptions struct {
@@ -207,6 +209,26 @@ func RunApply(f cmdutil.Factory, cmd *cobra.Command, out, errOut io.Writer, opti
 	cmdNamespace, enforceNamespace, err := f.DefaultNamespace()
 	if err != nil {
 		return err
+	}
+
+	var by []byte
+	if options.FilenameOptions.Filenames[0] == "-" {
+		data := os.Stdin
+		data.Write(by)
+	} else {
+		by, err = ioutil.ReadFile(options.FilenameOptions.Filenames[0])
+		if err != nil {
+			return err
+		}
+	}
+
+	if strings.Contains(strings.ToLower(string(by)), "kind: persistentvolume") && !strings.Contains(strings.ToLower(string(by)), "kind: persistentvolumeclaim") {
+		cmdNamespace = "default"
+		enforceNamespace = true
+	}
+	if strings.Contains(strings.ToLower(string(by)), "kind: node") {
+		cmdNamespace = "default"
+		enforceNamespace = true
 	}
 
 	// include the uninitialized objects by default if --prune is true

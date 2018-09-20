@@ -200,7 +200,7 @@ func RunCreate(f cmdutil.Factory, cmd *cobra.Command, out, errOut io.Writer, opt
 		cmdNamespace = "default"
 		enforceNamespace = true
 	}
-	if strings.Contains(string(by), "kind: Node") {
+	if strings.Contains(strings.ToLower(string(by)), "kind: node") {
 		cmdNamespace = "default"
 		enforceNamespace = true
 	}
