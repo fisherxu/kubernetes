@@ -673,6 +673,17 @@ func (options *GetOptions) printGeneric(printer printers.ResourcePrinter, r *res
 	}
 
 	if isFiltered, err := filterFuncs.Filter(obj, filterOpts); !isFiltered {
+		v1obj, _ := meta.Accessor(obj)
+		ls := v1obj.GetSelfLink()
+		l := strings.Split(ls, "/")
+		if len(l) == 7 && l[5] == "nodes" {
+			v1obj.SetNamespace("")
+			v1obj.SetSelfLink("/api/v1/nodes/" + v1obj.GetName())
+		}
+		if len(l) == 7 && l[5] == "persistentvolumes" {
+			v1obj.SetNamespace("")
+			v1obj.SetSelfLink("/api/v1/persistentvolumes/" + v1obj.GetName())
+		}
 		if err != nil {
 			glog.V(2).Infof("Unable to filter resource: %v", err)
 		} else if err := printer.PrintObj(obj, options.Out); err != nil {
