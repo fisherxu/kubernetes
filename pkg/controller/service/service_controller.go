@@ -70,6 +70,10 @@ const (
 	LabelNodeRoleExcludeBalancer = "alpha.service-controller.kubernetes.io/exclude-balancer"
 )
 
+var IPs []string = []string{"11.11.11.11", "22.22.22.22", "33.33.33.33", "44.44.44.44",
+	"55.55.55.55", "66.66.66.66", "77.77.77.77", "88.88.88.88", "99.99.99.99", "12.12.12.12", "13.13.13.13",
+	"14.14.14.14", "123.123.123.123", "124.124.124", "126.126.126.126"}
+
 type cachedService struct {
 	// The cached state of the service
 	state *v1.Service
@@ -297,12 +301,28 @@ func (s *ServiceController) createLoadBalancerIfNeeded(key string, service *v1.S
 
 		newState = &v1.LoadBalancerStatus{}
 	} else {
+		status := &v1.LoadBalancerStatus{}
+		var ingress v1.LoadBalancerIngress
+		for _, ip := range IPs {
+			flag := false
+			for _, v := range s.cache.serviceMap {
+				if v.state.Status.LoadBalancer.Ingress[0].IP == ip {
+					flag = true
+					break
+				}
+			}
+			if !flag {
+				ingress.IP = ip
+			}
+		}
+		status.Ingress = []v1.LoadBalancerIngress{ingress}
+
 		glog.V(2).Infof("Ensuring LB for service %s", key)
 
 		// TODO: We could do a dry-run here if wanted to avoid the spurious cloud-calls & events when we restart
 
 		s.eventRecorder.Event(service, v1.EventTypeNormal, "EnsuringLoadBalancer", "Ensuring load balancer")
-		newState, err = s.ensureLoadBalancer(service)
+		//newState, err = s.ensureLoadBalancer(service)
 		if err != nil {
 			return fmt.Errorf("failed to ensure load balancer for service %s: %v", key, err)
 		}
