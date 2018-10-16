@@ -27,6 +27,7 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -305,14 +306,16 @@ func (s *ServiceController) createLoadBalancerIfNeeded(key string, service *v1.S
 		var ingress v1.LoadBalancerIngress
 		for _, ip := range IPs {
 			flag := false
-			for _, v := range s.cache.serviceMap {
-				if len(v.state.Status.LoadBalancer.Ingress) > 0 && v.state.Status.LoadBalancer.Ingress[0].IP == ip {
+			ServiceItems, _ := s.serviceLister.Services(v1.NamespaceAll).List(labels.Everything())
+			for _, v := range ServiceItems {
+				if len(v.Status.LoadBalancer.Ingress) > 0 && v.Status.LoadBalancer.Ingress[0].IP == ip {
 					flag = true
 					break
 				}
 			}
 			if !flag {
 				ingress.IP = ip
+				break
 			}
 		}
 		status.Ingress = []v1.LoadBalancerIngress{ingress}
