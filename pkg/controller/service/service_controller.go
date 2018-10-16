@@ -154,9 +154,9 @@ func New(
 	s.serviceLister = serviceInformer.Lister()
 	s.serviceListerSynced = serviceInformer.Informer().HasSynced
 
-	if err := s.init(); err != nil {
-		return nil, err
-	}
+	//if err := s.init(); err != nil {
+	//	return nil, err
+	//}
 	return s, nil
 }
 
