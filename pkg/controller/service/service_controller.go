@@ -195,7 +195,7 @@ func (s *ServiceController) Run(stopCh <-chan struct{}, workers int) {
 		go wait.Until(s.worker, time.Second, stopCh)
 	}
 
-	go wait.Until(s.nodeSyncLoop, nodeSyncPeriod, stopCh)
+	//go wait.Until(s.nodeSyncLoop, nodeSyncPeriod, stopCh)
 
 	<-stopCh
 }
