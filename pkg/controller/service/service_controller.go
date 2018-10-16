@@ -781,11 +781,11 @@ func (s *ServiceController) processLoadBalancerDelete(cachedService *cachedServi
 		return nil
 	}
 	s.eventRecorder.Event(service, v1.EventTypeNormal, "DeletingLoadBalancer", "Deleting load balancer")
-	err := s.balancer.EnsureLoadBalancerDeleted(context.TODO(), s.clusterName, service)
-	if err != nil {
-		s.eventRecorder.Eventf(service, v1.EventTypeWarning, "DeletingLoadBalancerFailed", "Error deleting load balancer (will retry): %v", err)
-		return err
-	}
+	////err := s.balancer.EnsureLoadBalancerDeleted(context.TODO(), s.clusterName, service)
+	//if err != nil {
+	//	s.eventRecorder.Eventf(service, v1.EventTypeWarning, "DeletingLoadBalancerFailed", "Error deleting load balancer (will retry): %v", err)
+	//	return err
+	//}
 	s.eventRecorder.Event(service, v1.EventTypeNormal, "DeletedLoadBalancer", "Deleted load balancer")
 	s.cache.delete(key)
 
