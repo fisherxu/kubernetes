@@ -286,18 +286,18 @@ func (s *ServiceController) createLoadBalancerIfNeeded(key string, service *v1.S
 	var err error
 
 	if !wantsLoadBalancer(service) {
-		_, exists, err := s.balancer.GetLoadBalancer(context.TODO(), s.clusterName, service)
-		if err != nil {
-			return fmt.Errorf("error getting LB for service %s: %v", key, err)
-		}
-		if exists {
-			glog.Infof("Deleting existing load balancer for service %s that no longer needs a load balancer.", key)
-			s.eventRecorder.Event(service, v1.EventTypeNormal, "DeletingLoadBalancer", "Deleting load balancer")
-			if err := s.balancer.EnsureLoadBalancerDeleted(context.TODO(), s.clusterName, service); err != nil {
-				return err
-			}
-			s.eventRecorder.Event(service, v1.EventTypeNormal, "DeletedLoadBalancer", "Deleted load balancer")
-		}
+		//_, exists, err := s.balancer.GetLoadBalancer(context.TODO(), s.clusterName, service)
+		//if err != nil {
+		//	return fmt.Errorf("error getting LB for service %s: %v", key, err)
+		//}
+		//if exists {
+		//	glog.Infof("Deleting existing load balancer for service %s that no longer needs a load balancer.", key)
+		//	s.eventRecorder.Event(service, v1.EventTypeNormal, "DeletingLoadBalancer", "Deleting load balancer")
+		//	if err := s.balancer.EnsureLoadBalancerDeleted(context.TODO(), s.clusterName, service); err != nil {
+		//		return err
+		//	}
+		//	s.eventRecorder.Event(service, v1.EventTypeNormal, "DeletedLoadBalancer", "Deleted load balancer")
+		//}
 
 		newState = &v1.LoadBalancerStatus{}
 	} else {
@@ -316,6 +316,7 @@ func (s *ServiceController) createLoadBalancerIfNeeded(key string, service *v1.S
 			}
 		}
 		status.Ingress = []v1.LoadBalancerIngress{ingress}
+		newState = status
 
 		glog.V(2).Infof("Ensuring LB for service %s", key)
 
