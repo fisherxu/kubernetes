@@ -306,7 +306,7 @@ func (s *ServiceController) createLoadBalancerIfNeeded(key string, service *v1.S
 		for _, ip := range IPs {
 			flag := false
 			for _, v := range s.cache.serviceMap {
-				if v.state.Status.LoadBalancer.Ingress[0].IP == ip {
+				if len(v.state.Status.LoadBalancer.Ingress) > 0 && v.state.Status.LoadBalancer.Ingress[0].IP == ip {
 					flag = true
 					break
 				}
